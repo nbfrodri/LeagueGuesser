@@ -10,22 +10,18 @@ export function UltimateGame() {
   const [ultimateName, setUltimateName] = useState<string>("");
   const [ultimateImage, setUltimateImage] = useState<string>("");
 
-  const [blurLevel, setBlurLevel] = useState(30); // Start very blurry
-  const [version, setVersion] = useState("14.3.1");
+  const [pixelationLevel, setPixelationLevel] = useState(8); // Start very pixelated (8px blocks)
 
   const [guesses, setGuesses] = useState<string[]>([]);
   const [isVictory, setIsVictory] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const startNewGame = async (
-    champList: Champion[] = champions,
-    ver: string = version,
-  ) => {
+  const startNewGame = async (champList: Champion[] = champions) => {
     if (champList.length === 0) return;
     setLoading(true);
     setIsVictory(false);
     setGuesses([]);
-    setBlurLevel(30);
+    setPixelationLevel(8);
 
     // 1. Pick Random Champion
     const randomChamp = champList[Math.floor(Math.random() * champList.length)];
@@ -45,9 +41,7 @@ export function UltimateGame() {
     setTarget(randomChamp);
     setUltimateName(ult.name);
 
-    // Construct Image URL
-    const imgUrl = `https://ddragon.leagueoflegends.com/cdn/${ver}/img/spell/${ult.image.full}`;
-    setUltimateImage(imgUrl);
+    setUltimateImage(ult.image.full);
 
     setLoading(false);
   };
@@ -55,15 +49,9 @@ export function UltimateGame() {
   const loadData = async () => {
     setLoading(true);
 
-    // Fetch version
-    const url = "https://ddragon.leagueoflegends.com/api/versions.json";
-    const vResp = await fetch(url);
-    const versions = await vResp.json();
-    setVersion(versions[0]);
-
     const data = await fetchChampions();
     setChampions(data);
-    await startNewGame(data, versions[0]);
+    await startNewGame(data);
     setLoading(false);
   };
 
@@ -79,11 +67,17 @@ export function UltimateGame() {
 
     if (guess.id === target.id) {
       setIsVictory(true);
-      setBlurLevel(0); // Reveal on victory
+      setPixelationLevel(1); // Fully clear on victory
     } else {
-      // Reduce blur on wrong guess
-      setBlurLevel((prev) => Math.max(0, prev - 5));
+      // Depixelate on wrong guess
+      setPixelationLevel((prev) => Math.max(1, prev - 1));
     }
+  };
+
+  const showAnswer = () => {
+    if (!target) return;
+    setIsVictory(true);
+    setPixelationLevel(1);
   };
 
   if (loading || !target)
@@ -108,7 +102,10 @@ export function UltimateGame() {
               src={ultimateImage}
               alt="Mystery Ultimate"
               className="w-full h-full object-cover transition-all duration-700"
-              style={{ filter: `blur(${blurLevel}px)` }}
+              style={{
+                imageRendering: "pixelated",
+                filter: `blur(${pixelationLevel * 1.5}px) contrast(${2 - pixelationLevel * 0.15})`,
+              }}
             />
           </div>
 
@@ -118,7 +115,7 @@ export function UltimateGame() {
         </div>
 
         {!isVictory && (
-          <div className="w-full max-w-md z-10 mx-auto">
+          <div className="w-full max-w-md mx-auto">
             <SearchBar
               data={champions}
               onSelect={handleGuess}
@@ -129,8 +126,16 @@ export function UltimateGame() {
               }
               placeholder="Who uses this Ultimate?"
             />
-            <div className="text-center text-slate-300 mt-4">
-              Wrong guesses: {guesses.length} (Blur: {blurLevel}px)
+            <div className="flex justify-center mt-3">
+              <button
+                onClick={showAnswer}
+                className="px-4 py-2 rounded-lg bg-yellow-600/80 hover:bg-yellow-500 text-white font-semibold text-sm transition-colors"
+              >
+                Show Answer
+              </button>
+            </div>
+            <div className="text-center text-slate-300 mt-2">
+              Wrong guesses: {guesses.length} (Pixelation: {pixelationLevel}/8)
             </div>
           </div>
         )}

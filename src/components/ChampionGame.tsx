@@ -46,6 +46,11 @@ export function ChampionGuessGame() {
     }
   };
 
+  const showAnswer = () => {
+    if (!target) return;
+    handleGuess(target);
+  };
+
   const getCellColor = (status: string) => {
     switch (status) {
       case "correct":
@@ -80,16 +85,26 @@ export function ChampionGuessGame() {
         </h1>
 
         {!isVictory && (
-          <SearchBar
-            data={champions}
-            onSelect={handleGuess}
-            getKey={(c) => c.name}
-            filter={(c, q) =>
-              c.name.toLowerCase().includes(q.toLowerCase()) &&
-              !guesses.some((g) => g.champion.id === c.id)
-            }
-            placeholder="Type a champion name..."
-          />
+          <>
+            <SearchBar
+              data={champions}
+              onSelect={handleGuess}
+              getKey={(c) => c.name}
+              filter={(c, q) =>
+                c.name.toLowerCase().includes(q.toLowerCase()) &&
+                !guesses.some((g) => g.champion.id === c.id)
+              }
+              placeholder="Type a champion name..."
+            />
+            <div className="flex justify-center mt-4 mb-4">
+              <button
+                onClick={showAnswer}
+                className="px-4 py-2 rounded-lg bg-yellow-600/80 hover:bg-yellow-500 text-white font-semibold text-sm transition-colors"
+              >
+                Show Answer
+              </button>
+            </div>
+          </>
         )}
 
         <div className="overflow-x-auto w-full max-w-6xl rounded-xl border border-slate-700/60">

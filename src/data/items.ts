@@ -9,7 +9,7 @@ export const items: Item[] = [
     cost: 3300,
     effects: ["Critical Strike Damage"],
     components: ["bf_sword", "pickaxe", "cloak_of_agility"],
-    icon: "https://ddragon.leagueoflegends.com/cdn/14.3.1/img/item/3031.png",
+    icon: "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/item-icons/3031.png",
   },
   {
     id: "rabadons_deathcap",
@@ -19,7 +19,7 @@ export const items: Item[] = [
     cost: 3600,
     effects: ["Increase AP by %"],
     components: ["needlessly_large_rod", "needlessly_large_rod"],
-    icon: "https://ddragon.leagueoflegends.com/cdn/14.3.1/img/item/3089.png",
+    icon: "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/item-icons/3089.png",
   },
   {
     id: "sunfire_aegis",
@@ -29,7 +29,7 @@ export const items: Item[] = [
     cost: 2700,
     effects: ["Immolate"],
     components: ["bami's_cinder", "chain_vest"],
-    icon: "https://ddragon.leagueoflegends.com/cdn/14.3.1/img/item/3068.png",
+    icon: "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/item-icons/3068.png",
   },
   {
     id: "zhonyas_hourglass",
@@ -39,7 +39,7 @@ export const items: Item[] = [
     cost: 3250,
     effects: ["Stasis"],
     components: ["seeker's_armguard", "fiendish_codex"],
-    icon: "https://ddragon.leagueoflegends.com/cdn/14.3.1/img/item/3157.png",
+    icon: "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/item-icons/3157.png",
   },
   {
     id: "redemption",
@@ -49,7 +49,7 @@ export const items: Item[] = [
     cost: 2300,
     effects: ["Heal Area"],
     components: ["kindlegem", "forbidden_idol"],
-    icon: "https://ddragon.leagueoflegends.com/cdn/14.3.1/img/item/3107.png",
+    icon: "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/item-icons/3107.png",
   },
   {
     id: "botrk",
@@ -59,7 +59,7 @@ export const items: Item[] = [
     cost: 3200,
     effects: ["Mist's Edge", "Siphon"],
     components: ["vampiric_scepter", "recurve_bow", "pickaxe"],
-    icon: "https://ddragon.leagueoflegends.com/cdn/14.3.1/img/item/3153.png",
+    icon: "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/item-icons/3153.png",
   },
   {
     id: "ludens_companion",
@@ -69,7 +69,7 @@ export const items: Item[] = [
     cost: 3000,
     effects: ["Load", "Fire"],
     components: ["lost_chapter", "hextech_alternator"],
-    icon: "https://ddragon.leagueoflegends.com/cdn/14.3.1/img/item/3285.png",
+    icon: "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/item-icons/3285.png",
   },
   {
     id: "warmogs_armor",
@@ -79,7 +79,7 @@ export const items: Item[] = [
     cost: 3100,
     effects: ["Warmog's Heart"],
     components: ["giant's_belt", "crystalline_bracer", "kindlegem"],
-    icon: "https://ddragon.leagueoflegends.com/cdn/14.3.1/img/item/3083.png",
+    icon: "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/item-icons/3083.png",
   },
   {
     id: "trinity_force",
@@ -89,7 +89,7 @@ export const items: Item[] = [
     cost: 3333,
     effects: ["Spellblade", "Threefold Strike"],
     components: ["sheen", "phage", "hearthbound_axe"],
-    icon: "https://ddragon.leagueoflegends.com/cdn/14.3.1/img/item/3078.png",
+    icon: "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/item-icons/3078.png",
   },
   {
     id: "guardian_angel",
@@ -99,6 +99,6 @@ export const items: Item[] = [
     cost: 3200,
     effects: ["Rebirth"],
     components: ["bf_sword", "chain_vest", "stopwatch"],
-    icon: "https://ddragon.leagueoflegends.com/cdn/14.3.1/img/item/3026.png",
+    icon: "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/item-icons/3026.png",
   },
 ];

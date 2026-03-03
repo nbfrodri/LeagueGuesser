@@ -3,7 +3,11 @@ import type { Champion, ChampionGuessFeedback } from "../types";
 import { compareChampions } from "../utils/gameLogic";
 import { SearchBar } from "./SearchBar";
 import { VictoryModal } from "./VictoryModal";
-import { fetchChampions, fetchItems } from "../services/riotApi";
+import {
+  fetchChampions,
+  fetchItems,
+  fetchChampionBuild,
+} from "../services/riotApi";
 import { championBuilds } from "../data/championBuilds";
 
 export function ItemGuessGame() {
@@ -18,7 +22,7 @@ export function ItemGuessGame() {
   const [loading, setLoading] = useState(true);
 
   // Moved pickNewGame above useEffect to satisfy linter
-  const pickNewGame = (buildKeys: string[], champs: Champion[]) => {
+  const pickNewGame = async (buildKeys: string[], champs: Champion[]) => {
     const randomKey = buildKeys[Math.floor(Math.random() * buildKeys.length)];
     const target = champs.find(
       (c) => c.id.toLowerCase() === randomKey.toLowerCase(),
@@ -26,7 +30,18 @@ export function ItemGuessGame() {
 
     if (target) {
       setTargetChampion(target);
-      setTargetBuild(championBuilds[randomKey]);
+
+      // API-first: Try to fetch build from CommunityDragon
+      const apiBuild = await fetchChampionBuild(target.id);
+
+      // Fallback to local builds if API returns less than 6 items
+      if (apiBuild.length >= 6) {
+        console.log(`Using API build for ${target.name}:`, apiBuild);
+        setTargetBuild(apiBuild.slice(0, 6));
+      } else {
+        console.log(`Falling back to local build for ${target.name}`);
+        setTargetBuild(championBuilds[randomKey] || []);
+      }
     } else {
       console.error("Target champion not found in champion list:", randomKey);
     }
@@ -78,6 +93,11 @@ export function ItemGuessGame() {
     if (guess.id === targetChampion.id) {
       setIsVictory(true);
     }
+  };
+
+  const showAnswer = () => {
+    if (!targetChampion) return;
+    handleGuess(targetChampion);
   };
 
   const getCellColor = (status: string) => {
@@ -136,16 +156,26 @@ export function ItemGuessGame() {
         </div>
 
         {!isVictory && (
-          <SearchBar
-            data={champions}
-            onSelect={handleGuess}
-            getKey={(c) => c.name}
-            filter={(c, q) =>
-              c.name.toLowerCase().includes(q.toLowerCase()) &&
-              !guesses.some((g) => g.champion.id === c.id)
-            }
-            placeholder="Who builds this?..."
-          />
+          <>
+            <SearchBar
+              data={champions}
+              onSelect={handleGuess}
+              getKey={(c) => c.name}
+              filter={(c, q) =>
+                c.name.toLowerCase().includes(q.toLowerCase()) &&
+                !guesses.some((g) => g.champion.id === c.id)
+              }
+              placeholder="Who builds this?..."
+            />
+            <div className="flex justify-center mt-4 mb-4">
+              <button
+                onClick={showAnswer}
+                className="px-4 py-2 rounded-lg bg-yellow-600/80 hover:bg-yellow-500 text-white font-semibold text-sm transition-colors"
+              >
+                Show Answer
+              </button>
+            </div>
+          </>
         )}
 
         {/* Feedback Table (Reused from ChampionGame) */}

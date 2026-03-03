@@ -4,15 +4,6 @@ import { SearchBar } from "./SearchBar";
 import { VictoryModal } from "./VictoryModal";
 import { fetchChampions, fetchChampionDetail } from "../services/riotApi";
 
-// Helper to get image URL
-const getAbilityUrl = (
-  version: string,
-  filename: string,
-  type: "passive" | "spell",
-) => {
-  return `https://ddragon.leagueoflegends.com/cdn/${version}/img/${type}/${filename}`;
-};
-
 export function AbilityGame() {
   const [champions, setChampions] = useState<Champion[]>([]);
   const [target, setTarget] = useState<Champion | null>(null);
@@ -32,13 +23,9 @@ export function AbilityGame() {
 
   const [isVictory, setIsVictory] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [version, setVersion] = useState("14.3.1"); // Will fetch real version
   const [feedback, setFeedback] = useState<string | null>(null);
 
-  const startNewGame = async (
-    champList: Champion[] = champions,
-    ver: string = version,
-  ) => {
+  const startNewGame = async (champList: Champion[] = champions) => {
     if (champList.length === 0) return;
     setLoading(true);
     setPhase("champion");
@@ -66,7 +53,7 @@ export function AbilityGame() {
 
     if (pick === 0) {
       newAbilityData = {
-        image: getAbilityUrl(ver, detail.passive.image.full, "passive"),
+        image: detail.passive.image.full,
         slot: "P" as const,
         name: detail.passive.name,
       };
@@ -75,7 +62,7 @@ export function AbilityGame() {
       const spell = detail.spells[spellIndex];
       const slots = ["Q", "W", "E", "R"] as const;
       newAbilityData = {
-        image: getAbilityUrl(ver, spell.image.full, "spell"),
+        image: spell.image.full,
         slot: slots[spellIndex],
         name: spell.name,
       };
@@ -94,17 +81,9 @@ export function AbilityGame() {
 
   const loadData = async () => {
     setLoading(true);
-    // get version from API indirectly via fetchChampions or just hardcode/fetch separately
-    // Ideally we expose getLatestVersion from riotApi or just fetch champions and reuse its internal version logic
-    // For now, let's just fetch champions and assume version is reasonable or fetch it.
-    const url = "https://ddragon.leagueoflegends.com/api/versions.json";
-    const vResp = await fetch(url);
-    const versions = await vResp.json();
-    setVersion(versions[0]);
-
     const data = await fetchChampions();
     setChampions(data);
-    await startNewGame(data, versions[0]);
+    await startNewGame(data);
     setLoading(false);
   };
 
@@ -152,6 +131,16 @@ export function AbilityGame() {
     } else {
       setFeedback("Wrong slot! Try again.");
     }
+  };
+
+  const showAnswer = () => {
+    if (!target || !abilityData) return;
+    // Complete both phases and show victory
+    setPhase("slot");
+    setRotation(0);
+    setIsGrayscale(false);
+    setIsVictory(true);
+    setFeedback(null);
   };
 
   if (loading || !target || !abilityData)
@@ -203,6 +192,14 @@ export function AbilityGame() {
               }
               placeholder="Which champion has this ability?"
             />
+            <div className="flex justify-center mt-3">
+              <button
+                onClick={showAnswer}
+                className="px-4 py-2 rounded-lg bg-yellow-600/80 hover:bg-yellow-500 text-white font-semibold text-sm transition-colors"
+              >
+                Show Answer
+              </button>
+            </div>
             <div className="text-center text-slate-300 mt-2">
               Wrong guesses: {wrongGuessCount}
             </div>
@@ -210,17 +207,27 @@ export function AbilityGame() {
         )}
 
         {phase === "slot" && !isVictory && (
-          <div className="flex gap-2 sm:gap-4 flex-wrap justify-center">
-            {(["P", "Q", "W", "E", "R"] as const).map((slot) => (
+          <>
+            <div className="flex gap-2 sm:gap-4 flex-wrap justify-center">
+              {(["P", "Q", "W", "E", "R"] as const).map((slot) => (
+                <button
+                  key={slot}
+                  onClick={() => handleSlotGuess(slot)}
+                  className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-cyan-600 to-blue-700 text-white text-xl sm:text-2xl font-bold rounded-lg shadow-lg hover:from-cyan-500 hover:to-blue-600 transition active:scale-95"
+                >
+                  {slot}
+                </button>
+              ))}
+            </div>
+            <div className="flex justify-center mt-4">
               <button
-                key={slot}
-                onClick={() => handleSlotGuess(slot)}
-                className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-cyan-600 to-blue-700 text-white text-xl sm:text-2xl font-bold rounded-lg shadow-lg hover:from-cyan-500 hover:to-blue-600 transition active:scale-95"
+                onClick={showAnswer}
+                className="px-4 py-2 rounded-lg bg-yellow-600/80 hover:bg-yellow-500 text-white font-semibold text-sm transition-colors"
               >
-                {slot}
+                Show Answer
               </button>
-            ))}
-          </div>
+            </div>
+          </>
         )}
       </div>
 

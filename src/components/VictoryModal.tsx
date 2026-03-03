@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+
 interface VictoryModalProps {
   isOpen: boolean;
   onPlayAgain: () => void;
@@ -13,6 +15,25 @@ export function VictoryModal({
   targetName,
   targetIcon,
 }: VictoryModalProps) {
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.key === "r" || e.key === "R") {
+        // Close modal first, then start new game
+        onClose();
+        // Small delay to ensure modal closes before new game starts
+        setTimeout(() => {
+          onPlayAgain();
+        }, 50);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (
@@ -32,9 +53,17 @@ export function VictoryModal({
           </div>
         )}
 
-        <p className="text-lg mb-6 text-slate-200">
+        <p className="text-lg mb-4 text-slate-200">
           You correctly guessed{" "}
           <span className="font-bold text-cyan-300">{targetName}</span>!
+        </p>
+
+        <p className="text-xs sm:text-sm mb-6 text-slate-400">
+          Press{" "}
+          <kbd className="px-2 py-1 bg-slate-800 border border-slate-600 rounded text-emerald-400 font-semibold">
+            R
+          </kbd>{" "}
+          to play again
         </p>
 
         <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">

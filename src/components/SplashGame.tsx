@@ -10,6 +10,7 @@ export function SplashGame() {
   const [currentSkin, setCurrentSkin] = useState<{
     num: number;
     name: string;
+    splashPath?: string;
   } | null>(null);
 
   const [zoomLevel, setZoomLevel] = useState(3.5); // Start closer
@@ -31,15 +32,17 @@ export function SplashGame() {
     const detail = await fetchChampionDetail(randomChamp.apiId);
     let skinNum = 0;
     let skinName = "Default";
+    let splashPath: string | undefined;
 
     if (detail && detail.skins.length > 0) {
       const randomSkin =
         detail.skins[Math.floor(Math.random() * detail.skins.length)];
       skinNum = randomSkin.num;
       skinName = randomSkin.name === "default" ? "Default" : randomSkin.name;
+      splashPath = randomSkin.splashPath;
     }
 
-    setCurrentSkin({ num: skinNum, name: skinName });
+    setCurrentSkin({ num: skinNum, name: skinName, splashPath });
 
     // Random focus point, but keep away from extreme edges to avoid showing black bars if possible
     // though with overflow hidden and scale > 1 it should be fine.
@@ -84,6 +87,13 @@ export function SplashGame() {
     }
   };
 
+  const showAnswer = () => {
+    if (!target) return;
+    setIsVictory(true);
+    setZoomLevel(1);
+    setOrigin({ x: 50, y: 50 });
+  };
+
   if (loading || !target || !currentSkin)
     return (
       <div className="p-4 text-center text-slate-300">
@@ -91,9 +101,7 @@ export function SplashGame() {
       </div>
     );
 
-  // URL for the splash art
-  // Using specific skin number, using apiId (Original Casing)
-  const splashUrl = `https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${target.apiId}_${currentSkin.num}.jpg`;
+  const splashUrl = currentSkin.splashPath || target.icon;
 
   return (
     <div className="flex flex-col items-center p-3 sm:p-4 min-h-screen w-full">
@@ -126,6 +134,14 @@ export function SplashGame() {
               }
               placeholder="Who is this?..."
             />
+            <div className="flex justify-center mt-3">
+              <button
+                onClick={showAnswer}
+                className="px-4 py-2 rounded-lg bg-yellow-600/80 hover:bg-yellow-500 text-white font-semibold text-sm transition-colors"
+              >
+                Show Answer
+              </button>
+            </div>
             <div className="text-center text-slate-300 mt-2">
               Wrong guesses: {guesses.length} (Zoom: {zoomLevel.toFixed(1)}x)
             </div>

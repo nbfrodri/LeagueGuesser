@@ -1,7 +1,11 @@
 import type { Item, Champion } from "../types";
 import { championDetails } from "../data/championDetails";
 
-const VERSIONS_URL = "https://ddragon.leagueoflegends.com/api/versions.json";
+const CDRAGON_ROOT_URL =
+  "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default";
+const CDRAGON_BASE_URL = `${CDRAGON_ROOT_URL}/v1`;
+const CDRAGON_CHAMPION_SUMMARY_URL = `${CDRAGON_BASE_URL}/champion-summary.json`;
+const CDRAGON_ITEMS_URL = `${CDRAGON_BASE_URL}/items.json`;
 
 const CHAMPION_ID_ALIASES: Record<string, string> = {
   monkeyking: "wukong",
@@ -12,95 +16,114 @@ function normalizeChampionId(id: string): string {
   return CHAMPION_ID_ALIASES[lowered] ?? lowered;
 }
 
-// Default fallback version if fetch fails
-let LATEST_VERSION = "14.3.1";
+function toCommunityDragonAssetUrl(path: string | undefined): string {
+  if (!path) return "";
 
-async function getLatestVersion(): Promise<string> {
-  try {
-    const response = await fetch(VERSIONS_URL);
-    if (response.ok) {
-      const versions = await response.json();
-      LATEST_VERSION = versions[0];
-    }
-  } catch (e) {
-    console.error("Failed to fetch version, using fallback", e);
+  if (path.startsWith("http://") || path.startsWith("https://")) {
+    return path;
   }
-  return LATEST_VERSION;
+
+  const withoutPrefix = path.replace(/^\/lol-game-data\/assets\//i, "");
+  const normalized = (
+    withoutPrefix.startsWith("/") ? withoutPrefix.slice(1) : withoutPrefix
+  ).toLowerCase();
+
+  return `${CDRAGON_ROOT_URL}/${normalized}`;
 }
 
-interface RiotItem {
-  id: string; // Key in the JSON is the ID
+interface CommunityDragonItem {
+  id: number;
   name: string;
   description: string;
-  plaintext: string;
-  group?: string;
-  into?: string[];
-  image: {
-    full: string;
-    sprite: string;
-    group: string;
-    x: number;
-    y: number;
-    w: number;
-    h: number;
-  };
-  gold: { base: number; purchasable: boolean; total: number; sell: number };
-  tags: string[];
-  maps: { [key: string]: boolean };
-  stats: { [key: string]: number };
-  from?: string[]; // Component IDs
+  active?: boolean;
+  price?: number;
+  priceTotal?: number;
+  categories?: string[];
+  from?: number[];
+  iconPath?: string;
+  stats?: Record<string, number>;
 }
 
-interface RiotChampion {
-  id: string; // "Aatrox" (The key used in DDragon)
-  key: string; // "266" (Numeric ID)
+interface CDragonChampionSummary {
+  id: number;
+  alias: string;
   name: string;
-  title: string;
-  image: { full: string };
-  // ... other fields not needed given we use manual details
+  squarePortraitPath?: string;
+}
+
+function isExcludedChampionSummary(champion: CDragonChampionSummary): boolean {
+  const alias = champion.alias.toLowerCase();
+  const name = champion.name.toLowerCase();
+
+  return alias.startsWith("ruby_") || name.startsWith("doom bot");
+}
+
+interface CommunityDragonChampionSpell {
+  spellKey?: string;
+  name?: string;
+  description?: string;
+  abilityIconPath?: string;
+}
+
+interface CommunityDragonChampionDetail {
+  id?: number;
+  alias?: string;
+  name?: string;
+  title?: string;
+  shortBio?: string;
+  skins?: {
+    id: number | string;
+    name: string;
+    chromas?: boolean;
+    splashPath?: string;
+    uncenteredSplashPath?: string;
+  }[];
+  passive?: {
+    name?: string;
+    description?: string;
+    abilityIconPath?: string;
+  };
+  spells?: CommunityDragonChampionSpell[];
+}
+
+export interface ChampionVoiceClip {
+  championName: string;
+  chooseAudioUrl: string;
+  banAudioUrl: string;
 }
 
 export async function fetchItems(): Promise<Item[]> {
   try {
-    const version = await getLatestVersion();
-    const BASE_URL = `https://ddragon.leagueoflegends.com/cdn/${version}/data/en_US/item.json`;
-    const IMG_BASE_URL = `https://ddragon.leagueoflegends.com/cdn/${version}/img/item/`;
-
-    const response = await fetch(BASE_URL);
+    const response = await fetch(CDRAGON_ITEMS_URL);
     if (!response.ok) throw new Error("Failed to fetch items");
 
-    const data = await response.json();
-    const rawItems: { [key: string]: RiotItem } = data.data;
+    const items = (await response.json()) as CommunityDragonItem[];
 
-    return Object.entries(rawItems)
-      .filter(([, item]) => {
-        // Relaxed filter: Just ensure it has a name.
-        // Note: item object from DDragon might not have 'id' property strictly, it's the key.
-        return !!item.name;
-      })
-      .map(([id, item]) => {
-        // Transform stats keys to readable format
-        const stats = Object.keys(item.stats).map((key) =>
+    return items
+      .filter((item) => !!item.name && item.id > 0)
+      .map((item) => {
+        const statLabels = Object.keys(item.stats ?? {}).map((key) =>
           key
             .replace(/Flat|Percent|Mod/g, "")
             .replace(/([A-Z])/g, " $1")
             .trim(),
         );
 
-        // Simple effect extraction from tags or plaintext for now.
-        // Parsing "description" HTML is complex.
-        // We will use tags and plaintext.
-        const effects = [item.plaintext, ...item.tags].filter(Boolean);
+        const effects = [item.description, ...(item.categories ?? [])].filter(
+          Boolean,
+        );
 
         return {
-          id: id,
+          id: String(item.id),
           name: item.name,
-          types: item.tags,
-          stats: stats,
-          cost: item.gold.total,
-          effects: effects, // Simplified
-          components: item.from || [],
-          icon: `${IMG_BASE_URL}${item.image.full}`,
+          types: item.categories ?? [],
+          stats: statLabels,
+          cost: item.priceTotal ?? item.price ?? 0,
+          effects,
+          components: (item.from ?? []).map(String),
+          icon:
+            toCommunityDragonAssetUrl(item.iconPath) ||
+            `${CDRAGON_BASE_URL}/item-icons/${item.id}.png`,
         };
       });
   } catch (error) {
@@ -111,43 +134,40 @@ export async function fetchItems(): Promise<Item[]> {
 
 export async function fetchChampions(): Promise<Champion[]> {
   try {
-    const version = await getLatestVersion();
-    const CHAMPION_URL = `https://ddragon.leagueoflegends.com/cdn/${version}/data/en_US/champion.json`;
-    const CHAMP_IMG_BASE_URL = `https://ddragon.leagueoflegends.com/cdn/${version}/img/champion/`;
-
-    const response = await fetch(CHAMPION_URL);
+    const response = await fetch(CDRAGON_CHAMPION_SUMMARY_URL);
     if (!response.ok) throw new Error("Failed to fetch champions");
 
-    const data = await response.json();
-    const rawChampions: { [key: string]: RiotChampion } = data.data;
+    const rawChampions = (await response.json()) as CDragonChampionSummary[];
 
     const champions: Champion[] = [];
 
     const processedIds = new Set<string>();
 
-    // Iterate over Riot champions and include ALL of them
-    for (const [id, riotChamp] of Object.entries(rawChampions)) {
-      // Normalize ID to local canonical key (e.g. MonkeyKing -> wukong)
-      const normalizedId = normalizeChampionId(id);
+    for (const champ of rawChampions.filter(
+      (entry) => entry.id > 0 && !isExcludedChampionSummary(entry),
+    )) {
+      const normalizedId = normalizeChampionId(champ.alias);
       const details = championDetails[normalizedId];
-      // Mark as processed
       processedIds.add(normalizedId);
 
       if (details) {
         champions.push({
           id: normalizedId,
-          apiId: id, // Original casing (e.g. "Aatrox")
-          name: riotChamp.name, // Use official name
-          icon: `${CHAMP_IMG_BASE_URL}${riotChamp.image.full}`, // Use official icon
-          ...details, // Spread manual details (gender, region, etc.)
+          apiId: champ.alias,
+          name: champ.name,
+          icon:
+            toCommunityDragonAssetUrl(champ.squarePortraitPath) ||
+            `${CDRAGON_BASE_URL}/champion-icons/${champ.id}.png`,
+          ...details,
         });
       } else {
-        // Fallback for champions not in our manual list
         champions.push({
           id: normalizedId,
-          apiId: id,
-          name: riotChamp.name,
-          icon: `${CHAMP_IMG_BASE_URL}${riotChamp.image.full}`,
+          apiId: champ.alias,
+          name: champ.name,
+          icon:
+            toCommunityDragonAssetUrl(champ.squarePortraitPath) ||
+            `${CDRAGON_BASE_URL}/champion-icons/${champ.id}.png`,
           gender: "Unknown",
           positions: ["Unknown"],
           species: "Unknown",
@@ -159,20 +179,14 @@ export async function fetchChampions(): Promise<Champion[]> {
       }
     }
 
-    // Add champions from championDetails that were NOT in the API (Future/Custom)
-    // processedIds is already populated in the loop above
-
     for (const [id, details] of Object.entries(championDetails)) {
       if (!processedIds.has(id)) {
-        // Capitalize first letter for name
         const name = id.charAt(0).toUpperCase() + id.slice(1);
         champions.push({
           id: id,
-          apiId: name, // Best guess for future/custom is the name itself (capitalized)
+          apiId: name,
           name: name,
-          // Try to guess the icon URL based on the name for potential future inclusions
-          // or use the generic fallback if it fails to load (client-side)
-          icon: `${CHAMP_IMG_BASE_URL}${name}.png`,
+          icon: `${CDRAGON_BASE_URL}/champion-icons/-1.png`,
           ...details,
         });
       }
@@ -185,14 +199,44 @@ export async function fetchChampions(): Promise<Champion[]> {
   }
 }
 
+export async function fetchChampionVoiceClips(): Promise<ChampionVoiceClip[]> {
+  try {
+    const summaryUrl =
+      "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-summary.json";
+    const baseUrl =
+      "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1";
+
+    const response = await fetch(summaryUrl);
+    if (!response.ok) throw new Error("Failed to fetch champion summary");
+
+    const summary = (await response.json()) as CDragonChampionSummary[];
+
+    return summary
+      .filter(
+        (champion) => champion.id > 0 && !isExcludedChampionSummary(champion),
+      )
+      .map((champion) => ({
+        championName: champion.name,
+        chooseAudioUrl: `${baseUrl}/champion-choose-vo/${champion.id}.ogg`,
+        banAudioUrl: `${baseUrl}/champion-ban-vo/${champion.id}.ogg`,
+      }));
+  } catch (error) {
+    console.error("Error fetching champion voice clips:", error);
+    return [];
+  }
+}
+
 export interface ChampionDetail {
   id: string;
   name: string;
+  title: string;
+  lore: string;
   skins: {
     id: string;
     num: number;
     name: string;
     chromas: boolean;
+    splashPath?: string;
   }[];
   passive: {
     name: string;
@@ -207,27 +251,174 @@ export interface ChampionDetail {
   }[];
 }
 
+let championIdByAliasCache: Record<string, number> | null = null;
+
+async function getChampionIdByAlias(): Promise<Record<string, number>> {
+  if (championIdByAliasCache) {
+    return championIdByAliasCache;
+  }
+
+  const response = await fetch(CDRAGON_CHAMPION_SUMMARY_URL);
+  if (!response.ok) {
+    throw new Error("Failed to fetch champion summary");
+  }
+
+  const summary = (await response.json()) as CDragonChampionSummary[];
+  championIdByAliasCache = Object.fromEntries(
+    summary
+      .filter(
+        (champion) => champion.id > 0 && !isExcludedChampionSummary(champion),
+      )
+      .map((champion) => [champion.alias.toLowerCase(), champion.id]),
+  );
+
+  return championIdByAliasCache;
+}
+
 export async function fetchChampionDetail(
   apiId: string,
 ): Promise<ChampionDetail | null> {
   try {
-    const version = await getLatestVersion();
-    const URL = `https://ddragon.leagueoflegends.com/cdn/${version}/data/en_US/champion/${apiId}.json`;
-    const response = await fetch(URL);
+    const idByAlias = await getChampionIdByAlias();
+    const championId = idByAlias[apiId.toLowerCase()];
+    if (!championId) {
+      throw new Error(`No CommunityDragon champion id found for ${apiId}`);
+    }
+
+    const url = `${CDRAGON_BASE_URL}/champions/${championId}.json`;
+    const response = await fetch(url);
     if (!response.ok) throw new Error("Failed to fetch champion detail");
 
-    const data = await response.json();
-    const champData = data.data[apiId];
+    const champData = (await response.json()) as CommunityDragonChampionDetail;
 
     return {
-      id: champData.id,
-      name: champData.name,
-      skins: champData.skins,
-      passive: champData.passive,
-      spells: champData.spells,
+      id: String(champData.id ?? championId),
+      name: champData.name ?? apiId,
+      title: champData.title ?? "",
+      lore: champData.shortBio ?? "",
+      skins: (champData.skins ?? []).map((skin, index) => ({
+        id: String(skin.id ?? index),
+        num: index,
+        name: skin.name,
+        chromas: Boolean(skin.chromas),
+        splashPath: toCommunityDragonAssetUrl(
+          skin.splashPath ?? skin.uncenteredSplashPath,
+        ),
+      })),
+      passive: {
+        name: champData.passive?.name ?? "",
+        description: champData.passive?.description ?? "",
+        image: {
+          full: toCommunityDragonAssetUrl(champData.passive?.abilityIconPath),
+        },
+      },
+      spells: (champData.spells ?? []).map((spell, index) => ({
+        id: spell.spellKey ?? String(index),
+        name: spell.name ?? "",
+        description: spell.description ?? "",
+        image: { full: toCommunityDragonAssetUrl(spell.abilityIconPath) },
+      })),
     };
   } catch (e) {
     console.error("Error fetching detail for", apiId, e);
+    return null;
+  }
+}
+
+/**
+ * Fetches champion build from CommunityDragon API.
+ * Returns an array of item IDs (as strings) for the recommended build.
+ * Returns empty array if no build data is available or on error.
+ */
+export async function fetchChampionBuild(apiId: string): Promise<string[]> {
+  try {
+    const idByAlias = await getChampionIdByAlias();
+    const championId = idByAlias[apiId.toLowerCase()];
+    if (!championId) {
+      console.warn(`No CommunityDragon champion id found for ${apiId}`);
+      return [];
+    }
+
+    const url = `${CDRAGON_BASE_URL}/champions/${championId}.json`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      console.warn(`Failed to fetch champion detail for ${apiId}`);
+      return [];
+    }
+
+    const champData = await response.json();
+
+    // Try to extract recommended items from the champion data
+    // CommunityDragon may have recommendedItemDefaults or other build data
+    const recommendedItems = champData.recommendedItemDefaults;
+
+    if (Array.isArray(recommendedItems) && recommendedItems.length > 0) {
+      // Extract item IDs and convert to strings
+      const itemIds = recommendedItems
+        .filter((item: any) => item && typeof item === "number")
+        .map((id: number) => String(id));
+
+      return itemIds;
+    }
+
+    // If no recommended items found, return empty array
+    return [];
+  } catch (e) {
+    console.warn("Error fetching build for", apiId, e);
+    return [];
+  }
+}
+
+export interface ChampionRunePage {
+  keystoneId: string;
+  primaryRunes: string[]; // Array of rune IDs
+  secondaryRunes: string[]; // Array of rune IDs
+}
+
+/**
+ * Fetches champion rune data from CommunityDragon API.
+ * Returns rune IDs if available, empty object if not.
+ */
+export async function fetchChampionRunes(
+  apiId: string,
+): Promise<ChampionRunePage | null> {
+  try {
+    const idByAlias = await getChampionIdByAlias();
+    const championId = idByAlias[apiId.toLowerCase()];
+    if (!championId) {
+      console.warn(`No CommunityDragon champion id found for ${apiId}`);
+      return null;
+    }
+
+    const url = `${CDRAGON_BASE_URL}/champions/${championId}.json`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      console.warn(`Failed to fetch champion detail for ${apiId}`);
+      return null;
+    }
+
+    const champData = await response.json();
+
+    // Try to extract recommended runes from the champion data
+    // CommunityDragon may have recommendedRuneSetup or similar
+    const runeSetup = champData.recommendedRuneSetup;
+
+    if (runeSetup) {
+      return {
+        keystoneId: String(runeSetup.keystoneId || ""),
+        primaryRunes: (runeSetup.primaryRunes || []).map((id: number) =>
+          String(id),
+        ),
+        secondaryRunes: (runeSetup.secondaryRunes || []).map((id: number) =>
+          String(id),
+        ),
+      };
+    }
+
+    // If no recommended runes found, return null
+    return null;
+  } catch (e) {
+    console.warn("Error fetching runes for", apiId, e);
     return null;
   }
 }

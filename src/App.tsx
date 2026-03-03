@@ -4,16 +4,35 @@ import { ChampionGuessGame } from "./components/ChampionGame";
 import { ItemGuessGame } from "./components/ItemGame";
 import { SplashGame } from "./components/SplashGame";
 import { AbilityGame } from "./components/AbilityGame";
+import { AbilityOrderGame } from "./components/AbilityOrderGame";
+import { LoreQuoteGame } from "./components/LoreQuoteGame";
+import { VoiceLineGame } from "./components/VoiceLineGame";
+import { ColorPaletteGame } from "./components/ColorPaletteGame";
+import { RegionFactionGame } from "./components/RegionFactionGame";
 import { UltimateGame } from "./components/UltimateGame";
+import { CounterpickGame } from "./components/CounterpickGame";
 
 import { Footer } from "./components/Footer";
 
 function App() {
   const [mode, setMode] = useState<
-    "home" | "champion" | "item" | "splash" | "ability" | "ultimate"
+    | "home"
+    | "champion"
+    | "item"
+    | "splash"
+    | "ability"
+    | "ability-order"
+    | "lore-quote"
+    | "voice-line"
+    | "color-palette"
+    | "region-faction"
+    | "ultimate"
+    | "counterpick"
   >("home");
 
-  const goToHome = () => setMode("home");
+  const goToHome = () => {
+    setMode("home");
+  };
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans relative flex flex-col w-full">
@@ -68,7 +87,13 @@ function App() {
         {mode === "item" && <ItemGuessGame />}
         {mode === "splash" && <SplashGame />}
         {mode === "ability" && <AbilityGame />}
+        {mode === "ability-order" && <AbilityOrderGame />}
+        {mode === "lore-quote" && <LoreQuoteGame />}
+        {mode === "voice-line" && <VoiceLineGame />}
+        {mode === "color-palette" && <ColorPaletteGame />}
+        {mode === "region-faction" && <RegionFactionGame />}
         {mode === "ultimate" && <UltimateGame />}
+        {mode === "counterpick" && <CounterpickGame />}
       </div>
 
       <Footer />
