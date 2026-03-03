@@ -34,7 +34,7 @@ export function SearchBar<T>({
     <div className="relative w-full max-w-md mx-auto mb-6">
       <input
         type="text"
-        className="w-full p-2 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-black"
+        className="w-full px-3 py-2.5 sm:py-2 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-black text-base"
         placeholder={placeholder || "Search..."}
         value={query}
         onChange={(e) => {
@@ -53,7 +53,7 @@ export function SearchBar<T>({
           {suggestions.map((item, index) => (
             <li
               key={index}
-              className="p-2 flex items-center gap-2 text-black cursor-pointer hover:bg-gray-100"
+              className="p-2.5 flex items-center gap-2 text-black cursor-pointer hover:bg-gray-100"
               onClick={() => handleSelect(item)}
             >
               {/* If item has icon, we could show it here, but generic is fine for now if we don't assume shape */}

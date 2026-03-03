@@ -158,14 +158,14 @@ export function AbilityGame() {
     return <div className="p-4 text-center">Loading Ability...</div>;
 
   return (
-    <div className="flex flex-col items-center p-4 min-h-screen bg-gray-100">
-      <h1 className="text-3xl font-bold mb-4 text-gray-800">
+    <div className="flex flex-col items-center p-3 sm:p-4 min-h-screen bg-gray-100 w-full">
+      <h1 className="text-2xl sm:text-3xl font-bold mb-4 text-gray-800 text-center">
         Guess the Ability
       </h1>
 
       {/* Ability Image Container */}
       <div className="mb-8 flex flex-col items-center">
-        <div className="w-32 h-32 border-4 border-gray-800 rounded-full overflow-hidden shadow-xl bg-black relative">
+        <div className="w-24 h-24 sm:w-32 sm:h-32 border-4 border-gray-800 rounded-full overflow-hidden shadow-xl bg-black relative">
           <img
             src={abilityData.image}
             alt="Mystery Ability"
@@ -207,12 +207,12 @@ export function AbilityGame() {
       )}
 
       {phase === "slot" && !isVictory && (
-        <div className="flex gap-4">
+        <div className="flex gap-2 sm:gap-4 flex-wrap justify-center">
           {(["P", "Q", "W", "E", "R"] as const).map((slot) => (
             <button
               key={slot}
               onClick={() => handleSlotGuess(slot)}
-              className="w-16 h-16 bg-blue-600 text-white text-2xl font-bold rounded-lg shadow hover:bg-blue-700 transition active:scale-95"
+              className="w-12 h-12 sm:w-16 sm:h-16 bg-blue-600 text-white text-xl sm:text-2xl font-bold rounded-lg shadow hover:bg-blue-700 transition active:scale-95"
             >
               {slot}
             </button>

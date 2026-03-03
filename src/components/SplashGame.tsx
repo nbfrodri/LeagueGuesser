@@ -92,12 +92,12 @@ export function SplashGame() {
   const splashUrl = `https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${target.apiId}_${currentSkin.num}.jpg`;
 
   return (
-    <div className="flex flex-col items-center p-4 min-h-screen bg-gray-100">
-      <h1 className="text-3xl font-bold mb-4 text-gray-800">
+    <div className="flex flex-col items-center p-3 sm:p-4 min-h-screen bg-gray-100 w-full">
+      <h1 className="text-2xl sm:text-3xl font-bold mb-4 text-gray-800 text-center">
         Guess the Splash Art
       </h1>
 
-      <div className="relative w-full max-w-4xl h-[500px] border-4 border-gray-800 rounded-lg overflow-hidden shadow-2xl mb-6 bg-black">
+      <div className="relative w-full max-w-4xl h-[260px] sm:h-[380px] md:h-[500px] border-4 border-gray-800 rounded-lg overflow-hidden shadow-2xl mb-6 bg-black">
         <img
           src={splashUrl}
           alt="Mystery Splash"

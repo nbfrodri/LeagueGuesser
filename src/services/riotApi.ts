@@ -3,6 +3,15 @@ import { championDetails } from "../data/championDetails";
 
 const VERSIONS_URL = "https://ddragon.leagueoflegends.com/api/versions.json";
 
+const CHAMPION_ID_ALIASES: Record<string, string> = {
+  monkeyking: "wukong",
+};
+
+function normalizeChampionId(id: string): string {
+  const lowered = id.toLowerCase();
+  return CHAMPION_ID_ALIASES[lowered] ?? lowered;
+}
+
 // Default fallback version if fetch fails
 let LATEST_VERSION = "14.3.1";
 
@@ -118,8 +127,8 @@ export async function fetchChampions(): Promise<Champion[]> {
 
     // Iterate over Riot champions and include ALL of them
     for (const [id, riotChamp] of Object.entries(rawChampions)) {
-      // Normalize ID to lowercase to match our manual dictionary keys
-      const normalizedId = id.toLowerCase();
+      // Normalize ID to local canonical key (e.g. MonkeyKing -> wukong)
+      const normalizedId = normalizeChampionId(id);
       const details = championDetails[normalizedId];
       // Mark as processed
       processedIds.add(normalizedId);

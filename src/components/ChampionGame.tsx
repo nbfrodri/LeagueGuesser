@@ -71,8 +71,10 @@ export function ChampionGuessGame() {
     return <div className="p-4 text-center">Loading Data...</div>;
 
   return (
-    <div className="flex flex-col items-center p-4">
-      <h1 className="text-3xl font-bold mb-4">Guess the Champion</h1>
+    <div className="flex flex-col items-center p-3 sm:p-4 w-full">
+      <h1 className="text-2xl sm:text-3xl font-bold mb-4 text-center">
+        Guess the Champion
+      </h1>
 
       {!isVictory && (
         <SearchBar
@@ -88,27 +90,27 @@ export function ChampionGuessGame() {
       )}
 
       <div className="overflow-x-auto w-full max-w-6xl">
-        <table className="min-w-full text-center text-sm shadow-md rounded-lg overflow-hidden">
+        <table className="min-w-[760px] sm:min-w-full text-center text-xs sm:text-sm shadow-md rounded-lg overflow-hidden">
           <thead className="bg-gray-200 text-gray-700">
             <tr>
-              <th className="p-3">Champion</th>
-              <th className="p-3">Gender</th>
-              <th className="p-3">Position(s)</th>
-              <th className="p-3">Species</th>
-              <th className="p-3">Resource</th>
-              <th className="p-3">Range Type</th>
-              <th className="p-3">Region(s)</th>
-              <th className="p-3">Release Year</th>
+              <th className="p-2 sm:p-3">Champion</th>
+              <th className="p-2 sm:p-3">Gender</th>
+              <th className="p-2 sm:p-3">Position(s)</th>
+              <th className="p-2 sm:p-3">Species</th>
+              <th className="p-2 sm:p-3">Resource</th>
+              <th className="p-2 sm:p-3">Range Type</th>
+              <th className="p-2 sm:p-3">Region(s)</th>
+              <th className="p-2 sm:p-3">Release Year</th>
             </tr>
           </thead>
           <tbody className="bg-white">
             {guesses.map((g, i) => (
               <tr key={i} className="border-b">
-                <td className="p-2 flex flex-col items-center">
+                <td className="p-2 flex flex-col items-center min-w-[120px]">
                   <img
                     src={g.champion.icon}
                     alt={g.champion.name}
-                    className="w-12 h-12 rounded-full mb-1 object-cover"
+                    className="w-10 h-10 sm:w-12 sm:h-12 rounded-full mb-1 object-cover"
                   />
                   <span className="font-semibold">{g.champion.name}</span>
                 </td>

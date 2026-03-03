@@ -1,6 +1,6 @@
 export function Footer() {
   return (
-    <footer className="w-full bg-gray-900 text-gray-400 py-6 text-center text-sm mt-auto">
+    <footer className="w-full bg-gray-900 text-gray-400 py-5 sm:py-6 text-center text-xs sm:text-sm mt-auto">
       <div className="container mx-auto px-4">
         <p className="mb-2">
           This is a fan-made game based on{" "}

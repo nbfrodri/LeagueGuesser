@@ -17,8 +17,10 @@ export function VictoryModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white p-6 rounded-lg shadow-xl text-center max-w-sm w-full mx-4">
-        <h2 className="text-2xl font-bold mb-4 text-green-600">Victory!</h2>
+      <div className="bg-white p-5 sm:p-6 rounded-lg shadow-xl text-center max-w-sm w-full mx-4">
+        <h2 className="text-xl sm:text-2xl font-bold mb-4 text-green-600">
+          Victory!
+        </h2>
 
         {targetIcon && (
           <div className="flex justify-center mb-4">
@@ -35,7 +37,7 @@ export function VictoryModal({
           <span className="font-bold text-blue-600">{targetName}</span>!
         </p>
 
-        <div className="flex justify-center gap-4">
+        <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
           <button
             onClick={onPlayAgain}
             className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors font-semibold shadow-md"

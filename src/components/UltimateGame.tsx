@@ -90,17 +90,17 @@ export function UltimateGame() {
     return <div className="p-4 text-center">Loading Ultimate...</div>;
 
   return (
-    <div className="flex flex-col items-center p-4 min-h-screen bg-gray-100">
-      <h1 className="text-3xl font-bold mb-4 text-gray-800">
+    <div className="flex flex-col items-center p-3 sm:p-4 min-h-screen bg-gray-100 w-full">
+      <h1 className="text-2xl sm:text-3xl font-bold mb-4 text-gray-800 text-center">
         Guess the Ultimate
       </h1>
 
-      <div className="bg-white p-8 rounded-lg shadow-xl mb-8 w-full max-w-2xl text-center border-t-8 border-red-600 flex flex-col items-center">
+      <div className="bg-white p-4 sm:p-8 rounded-lg shadow-xl mb-8 w-full max-w-2xl text-center border-t-8 border-red-600 flex flex-col items-center">
         <h2 className="text-gray-500 uppercase tracking-widest font-bold mb-4">
           Ultimate Ability
         </h2>
 
-        <div className="mb-6 w-32 h-32 bg-black rounded-lg overflow-hidden relative border-4 border-gray-200">
+        <div className="mb-6 w-24 h-24 sm:w-32 sm:h-32 bg-black rounded-lg overflow-hidden relative border-4 border-gray-200">
           <img
             src={ultimateImage}
             alt="Mystery Ultimate"
@@ -109,7 +109,7 @@ export function UltimateGame() {
           />
         </div>
 
-        <div className="text-4xl md:text-6xl font-extrabold text-gray-900 break-words">
+        <div className="text-2xl sm:text-4xl md:text-6xl font-extrabold text-gray-900 break-words px-2">
           "{ultimateName}"
         </div>
       </div>
