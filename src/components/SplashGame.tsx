@@ -85,49 +85,53 @@ export function SplashGame() {
   };
 
   if (loading || !target || !currentSkin)
-    return <div className="p-4 text-center">Loading Splash Art...</div>;
+    return (
+      <div className="p-4 text-center text-slate-300">
+        Loading Splash Art...
+      </div>
+    );
 
   // URL for the splash art
   // Using specific skin number, using apiId (Original Casing)
   const splashUrl = `https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${target.apiId}_${currentSkin.num}.jpg`;
 
   return (
-    <div className="flex flex-col items-center p-3 sm:p-4 min-h-screen bg-gray-100 w-full">
-      <h1 className="text-2xl sm:text-3xl font-bold mb-4 text-gray-800 text-center">
-        Guess the Splash Art
-      </h1>
+    <div className="flex flex-col items-center p-3 sm:p-4 min-h-screen w-full">
+      <div className="w-full max-w-5xl rounded-2xl border border-slate-700/60 bg-slate-900/70 backdrop-blur-xl shadow-2xl shadow-black/40 p-4 sm:p-6">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-4 text-slate-100 text-center">
+          Guess the Splash Art
+        </h1>
 
-      <div className="relative w-full max-w-4xl h-[260px] sm:h-[380px] md:h-[500px] border-4 border-gray-800 rounded-lg overflow-hidden shadow-2xl mb-6 bg-black">
-        <img
-          src={splashUrl}
-          alt="Mystery Splash"
-          className="w-full h-full object-cover transition-all duration-700 ease-in-out"
-          style={{
-            transform: `scale(${zoomLevel})`,
-            transformOrigin: `${origin.x}% ${origin.y}%`,
-          }}
-        />
-
-        {/* Optional: Overlay to prevent right-click save? Or just simple img is fine. */}
-      </div>
-
-      {!isVictory && (
-        <div className="w-full max-w-md z-10">
-          <SearchBar
-            data={champions}
-            onSelect={handleGuess}
-            getKey={(c) => c.name}
-            filter={(c, q) =>
-              c.name.toLowerCase().includes(q.toLowerCase()) &&
-              !guesses.includes(c.name)
-            }
-            placeholder="Who is this?..."
+        <div className="relative w-full max-w-4xl mx-auto h-[260px] sm:h-[380px] md:h-[500px] border-2 border-slate-700 rounded-xl overflow-hidden shadow-2xl mb-6 bg-black">
+          <img
+            src={splashUrl}
+            alt="Mystery Splash"
+            className="w-full h-full object-cover transition-all duration-700 ease-in-out"
+            style={{
+              transform: `scale(${zoomLevel})`,
+              transformOrigin: `${origin.x}% ${origin.y}%`,
+            }}
           />
-          <div className="text-center text-gray-600 mt-2">
-            Wrong guesses: {guesses.length} (Zoom: {zoomLevel.toFixed(1)}x)
-          </div>
         </div>
-      )}
+
+        {!isVictory && (
+          <div className="w-full max-w-md z-10 mx-auto">
+            <SearchBar
+              data={champions}
+              onSelect={handleGuess}
+              getKey={(c) => c.name}
+              filter={(c, q) =>
+                c.name.toLowerCase().includes(q.toLowerCase()) &&
+                !guesses.includes(c.name)
+              }
+              placeholder="Who is this?..."
+            />
+            <div className="text-center text-slate-300 mt-2">
+              Wrong guesses: {guesses.length} (Zoom: {zoomLevel.toFixed(1)}x)
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Show wrong guesses list casually? Maybe not needed if we filter them out. */}
 

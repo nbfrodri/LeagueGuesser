@@ -8,6 +8,8 @@ A fan-made League of Legends guessing game inspired by [Loldle](https://loldle.n
 
 League Guesser is a browser-based trivia game where you test your knowledge of League of Legends champions, abilities, items, and splash arts. It pulls live data directly from the **Riot Games Data Dragon API**, so champion icons, ability images, splash arts, and item data are always sourced from the official game assets.
 
+The app includes a modern dark UI, mobile-responsive layouts, and polished game cards/tables for a better experience on desktop and phones.
+
 ### Game Modes
 
 | Mode                 | Description                                                                                                                                                                                                |
@@ -34,7 +36,7 @@ League Guesser is a browser-based trivia game where you test your knowledge of L
 
 ## 🤖 Built with AI
 
-This project was developed with the assistance of **Antigravity AI** (by Google DeepMind). The AI helped with code generation, component architecture, API integration, and iterative debugging — while all creative decisions and game design were guided by a human developer.
+This project was developed with AI-assisted coding workflows for implementation support, refactoring, and debugging — while all creative decisions and game design were guided by a human developer.
 
 ---
 
@@ -55,7 +57,7 @@ If something breaks after a new patch, it's likely because Riot updated their AP
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/LeagueGuesser.git
+git clone https://github.com/nbfrodri/LeagueGuesser.git
 
 # Install dependencies
 npm install

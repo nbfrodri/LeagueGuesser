@@ -34,7 +34,7 @@ export function SearchBar<T>({
     <div className="relative w-full max-w-md mx-auto mb-6">
       <input
         type="text"
-        className="w-full px-3 py-2.5 sm:py-2 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-black text-base"
+        className="w-full px-4 py-3 border border-slate-600 rounded-xl shadow-lg shadow-black/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/70 focus:border-cyan-400 bg-slate-900/80 text-slate-100 placeholder-slate-400 text-base"
         placeholder={placeholder || "Search..."}
         value={query}
         onChange={(e) => {
@@ -49,11 +49,11 @@ export function SearchBar<T>({
         }}
       />
       {isOpen && query && suggestions.length > 0 && (
-        <ul className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded shadow-lg max-h-60 overflow-y-auto">
+        <ul className="absolute z-20 w-full mt-2 bg-slate-900/95 border border-slate-700 rounded-xl shadow-2xl shadow-black/50 max-h-60 overflow-y-auto backdrop-blur">
           {suggestions.map((item, index) => (
             <li
               key={index}
-              className="p-2.5 flex items-center gap-2 text-black cursor-pointer hover:bg-gray-100"
+              className="p-2.5 flex items-center gap-2 text-slate-100 cursor-pointer hover:bg-slate-800 transition"
               onClick={() => handleSelect(item)}
             >
               {/* If item has icon, we could show it here, but generic is fine for now if we don't assume shape */}
@@ -62,7 +62,7 @@ export function SearchBar<T>({
                 <img
                   src={(item as any).icon}
                   alt=""
-                  className="w-8 h-8 rounded-full"
+                  className="w-8 h-8 rounded-full border border-slate-600"
                 />
               )}
               <span>{getKey(item)}</span>

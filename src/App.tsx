@@ -16,14 +16,15 @@ function App() {
   const goToHome = () => setMode("home");
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 font-sans relative flex flex-col w-full">
+    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans relative flex flex-col w-full">
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-indigo-950/30 via-slate-950 to-cyan-950/20" />
       {mode !== "home" && (
         <>
           <button
             onClick={goToHome}
             aria-label="Back to menu"
             title="Back to menu"
-            className="absolute top-2 left-2 z-50 h-9 w-9 rounded-full bg-gray-800 text-white flex items-center justify-center hover:bg-gray-700 transition sm:hidden"
+            className="absolute top-2 left-2 z-50 h-9 w-9 rounded-full border border-slate-600/70 bg-slate-900/90 text-slate-100 backdrop-blur flex items-center justify-center hover:bg-slate-800 transition sm:hidden"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -41,7 +42,7 @@ function App() {
           </button>
           <button
             onClick={goToHome}
-            className="hidden sm:inline-flex absolute top-4 left-4 z-50 bg-gray-800 text-white px-4 py-2 rounded text-base hover:bg-gray-700 transition items-center gap-1.5"
+            className="hidden sm:inline-flex absolute top-4 left-4 z-50 border border-slate-600/70 bg-slate-900/90 text-slate-100 px-4 py-2 rounded-lg text-base hover:bg-slate-800 transition items-center gap-1.5 backdrop-blur"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -61,7 +62,7 @@ function App() {
         </>
       )}
 
-      <div className="flex-grow">
+      <div className="relative z-10 flex-grow">
         {mode === "home" && <Home onSelectMode={setMode} />}
         {mode === "champion" && <ChampionGuessGame />}
         {mode === "item" && <ItemGuessGame />}

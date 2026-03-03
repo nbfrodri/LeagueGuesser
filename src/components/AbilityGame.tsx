@@ -155,70 +155,74 @@ export function AbilityGame() {
   };
 
   if (loading || !target || !abilityData)
-    return <div className="p-4 text-center">Loading Ability...</div>;
+    return (
+      <div className="p-4 text-center text-slate-300">Loading Ability...</div>
+    );
 
   return (
-    <div className="flex flex-col items-center p-3 sm:p-4 min-h-screen bg-gray-100 w-full">
-      <h1 className="text-2xl sm:text-3xl font-bold mb-4 text-gray-800 text-center">
-        Guess the Ability
-      </h1>
+    <div className="flex flex-col items-center p-3 sm:p-4 min-h-screen w-full">
+      <div className="w-full max-w-4xl rounded-2xl border border-slate-700/60 bg-slate-900/70 backdrop-blur-xl shadow-2xl shadow-black/40 p-4 sm:p-6">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-4 text-slate-100 text-center">
+          Guess the Ability
+        </h1>
 
-      {/* Ability Image Container */}
-      <div className="mb-8 flex flex-col items-center">
-        <div className="w-24 h-24 sm:w-32 sm:h-32 border-4 border-gray-800 rounded-full overflow-hidden shadow-xl bg-black relative">
-          <img
-            src={abilityData.image}
-            alt="Mystery Ability"
-            className="w-full h-full object-cover transition-all duration-500"
-            style={{
-              transform: `rotate(${rotation}deg)`,
-              filter: isGrayscale ? "grayscale(100%)" : "none",
-            }}
-          />
+        {/* Ability Image Container */}
+        <div className="mb-8 flex flex-col items-center">
+          <div className="w-24 h-24 sm:w-32 sm:h-32 border-4 border-slate-700 rounded-full overflow-hidden shadow-xl bg-black relative">
+            <img
+              src={abilityData.image}
+              alt="Mystery Ability"
+              className="w-full h-full object-cover transition-all duration-500"
+              style={{
+                transform: `rotate(${rotation}deg)`,
+                filter: isGrayscale ? "grayscale(100%)" : "none",
+              }}
+            />
+          </div>
+          <div className="mt-2 text-sm text-slate-300">
+            {phase === "champion"
+              ? "Identify the Champion!"
+              : "Identify the Ability Slot!"}
+          </div>
+          {feedback && (
+            <div className="mt-4 p-2 bg-red-500/15 text-red-200 border border-red-400/40 rounded">
+              {feedback}
+            </div>
+          )}
         </div>
-        <div className="mt-2 text-sm text-gray-600">
-          {phase === "champion"
-            ? "Identify the Champion!"
-            : "Identify the Ability Slot!"}
-        </div>
-        {feedback && (
-          <div className="mt-4 p-2 bg-red-100 text-red-700 border border-red-300 rounded animate-bounce">
-            {feedback}
+
+        {phase === "champion" && !isVictory && (
+          <div className="w-full max-w-md z-10 mx-auto">
+            <SearchBar
+              data={champions}
+              onSelect={handleChampionGuess}
+              getKey={(c) => c.name}
+              filter={(c, q) =>
+                c.name.toLowerCase().includes(q.toLowerCase()) &&
+                !guesses.includes(c.name)
+              }
+              placeholder="Which champion has this ability?"
+            />
+            <div className="text-center text-slate-300 mt-2">
+              Wrong guesses: {wrongGuessCount}
+            </div>
+          </div>
+        )}
+
+        {phase === "slot" && !isVictory && (
+          <div className="flex gap-2 sm:gap-4 flex-wrap justify-center">
+            {(["P", "Q", "W", "E", "R"] as const).map((slot) => (
+              <button
+                key={slot}
+                onClick={() => handleSlotGuess(slot)}
+                className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-cyan-600 to-blue-700 text-white text-xl sm:text-2xl font-bold rounded-lg shadow-lg hover:from-cyan-500 hover:to-blue-600 transition active:scale-95"
+              >
+                {slot}
+              </button>
+            ))}
           </div>
         )}
       </div>
-
-      {phase === "champion" && !isVictory && (
-        <div className="w-full max-w-md z-10">
-          <SearchBar
-            data={champions}
-            onSelect={handleChampionGuess}
-            getKey={(c) => c.name}
-            filter={(c, q) =>
-              c.name.toLowerCase().includes(q.toLowerCase()) &&
-              !guesses.includes(c.name)
-            }
-            placeholder="Which champion has this ability?"
-          />
-          <div className="text-center text-gray-600 mt-2">
-            Wrong guesses: {wrongGuessCount}
-          </div>
-        </div>
-      )}
-
-      {phase === "slot" && !isVictory && (
-        <div className="flex gap-2 sm:gap-4 flex-wrap justify-center">
-          {(["P", "Q", "W", "E", "R"] as const).map((slot) => (
-            <button
-              key={slot}
-              onClick={() => handleSlotGuess(slot)}
-              className="w-12 h-12 sm:w-16 sm:h-16 bg-blue-600 text-white text-xl sm:text-2xl font-bold rounded-lg shadow hover:bg-blue-700 transition active:scale-95"
-            >
-              {slot}
-            </button>
-          ))}
-        </div>
-      )}
 
       <VictoryModal
         isOpen={isVictory}

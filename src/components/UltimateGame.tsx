@@ -87,50 +87,54 @@ export function UltimateGame() {
   };
 
   if (loading || !target)
-    return <div className="p-4 text-center">Loading Ultimate...</div>;
+    return (
+      <div className="p-4 text-center text-slate-300">Loading Ultimate...</div>
+    );
 
   return (
-    <div className="flex flex-col items-center p-3 sm:p-4 min-h-screen bg-gray-100 w-full">
-      <h1 className="text-2xl sm:text-3xl font-bold mb-4 text-gray-800 text-center">
-        Guess the Ultimate
-      </h1>
+    <div className="flex flex-col items-center p-3 sm:p-4 min-h-screen w-full">
+      <div className="w-full max-w-3xl rounded-2xl border border-slate-700/60 bg-slate-900/70 backdrop-blur-xl shadow-2xl shadow-black/40 p-4 sm:p-6">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-4 text-slate-100 text-center">
+          Guess the Ultimate
+        </h1>
 
-      <div className="bg-white p-4 sm:p-8 rounded-lg shadow-xl mb-8 w-full max-w-2xl text-center border-t-8 border-red-600 flex flex-col items-center">
-        <h2 className="text-gray-500 uppercase tracking-widest font-bold mb-4">
-          Ultimate Ability
-        </h2>
+        <div className="bg-slate-900/90 p-4 sm:p-8 rounded-xl shadow-xl mb-8 w-full text-center border border-slate-700 flex flex-col items-center">
+          <h2 className="text-slate-400 uppercase tracking-widest font-bold mb-4">
+            Ultimate Ability
+          </h2>
 
-        <div className="mb-6 w-24 h-24 sm:w-32 sm:h-32 bg-black rounded-lg overflow-hidden relative border-4 border-gray-200">
-          <img
-            src={ultimateImage}
-            alt="Mystery Ultimate"
-            className="w-full h-full object-cover transition-all duration-700"
-            style={{ filter: `blur(${blurLevel}px)` }}
-          />
-        </div>
+          <div className="mb-6 w-24 h-24 sm:w-32 sm:h-32 bg-black rounded-lg overflow-hidden relative border-4 border-slate-600">
+            <img
+              src={ultimateImage}
+              alt="Mystery Ultimate"
+              className="w-full h-full object-cover transition-all duration-700"
+              style={{ filter: `blur(${blurLevel}px)` }}
+            />
+          </div>
 
-        <div className="text-2xl sm:text-4xl md:text-6xl font-extrabold text-gray-900 break-words px-2">
-          "{ultimateName}"
-        </div>
-      </div>
-
-      {!isVictory && (
-        <div className="w-full max-w-md z-10">
-          <SearchBar
-            data={champions}
-            onSelect={handleGuess}
-            getKey={(c) => c.name}
-            filter={(c, q) =>
-              c.name.toLowerCase().includes(q.toLowerCase()) &&
-              !guesses.includes(c.name)
-            }
-            placeholder="Who uses this Ultimate?"
-          />
-          <div className="text-center text-gray-600 mt-4">
-            Wrong guesses: {guesses.length} (Blur: {blurLevel}px)
+          <div className="text-2xl sm:text-4xl md:text-6xl font-extrabold text-slate-100 break-words px-2">
+            "{ultimateName}"
           </div>
         </div>
-      )}
+
+        {!isVictory && (
+          <div className="w-full max-w-md z-10 mx-auto">
+            <SearchBar
+              data={champions}
+              onSelect={handleGuess}
+              getKey={(c) => c.name}
+              filter={(c, q) =>
+                c.name.toLowerCase().includes(q.toLowerCase()) &&
+                !guesses.includes(c.name)
+              }
+              placeholder="Who uses this Ultimate?"
+            />
+            <div className="text-center text-slate-300 mt-4">
+              Wrong guesses: {guesses.length} (Blur: {blurLevel}px)
+            </div>
+          </div>
+        )}
+      </div>
 
       <VictoryModal
         isOpen={isVictory}

@@ -1,14 +1,14 @@
 export function Footer() {
   return (
-    <footer className="w-full bg-gray-900 text-gray-400 py-5 sm:py-6 text-center text-xs sm:text-sm mt-auto">
-      <div className="container mx-auto px-4">
+    <footer className="w-full border-t border-slate-800 bg-slate-950/80 text-slate-400 py-5 sm:py-6 text-center text-xs sm:text-sm mt-auto">
+      <div className="container mx-auto px-4 max-w-5xl">
         <p className="mb-2">
           This is a fan-made game based on{" "}
           <a
             href="https://loldle.net/"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-gray-200 hover:text-white underline"
+            className="text-cyan-300 hover:text-cyan-200 underline"
           >
             Loldle
           </a>
