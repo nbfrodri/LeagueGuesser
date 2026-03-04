@@ -7,8 +7,14 @@ import {
   fetchChampions,
   fetchItems,
   fetchChampionBuild,
+  prefetchChampionBuilds,
 } from "../services/riotApi";
 import { championBuilds } from "../data/championBuilds";
+
+interface ItemRound {
+  targetChampion: Champion;
+  targetBuild: string[];
+}
 
 export function ItemGuessGame() {
   const [champions, setChampions] = useState<Champion[]>([]);
@@ -16,36 +22,48 @@ export function ItemGuessGame() {
 
   const [targetChampion, setTargetChampion] = useState<Champion | null>(null);
   const [targetBuild, setTargetBuild] = useState<string[]>([]); // Array of Item IDs
+  const [nextRound, setNextRound] = useState<ItemRound | null>(null);
 
   const [guesses, setGuesses] = useState<ChampionGuessFeedback[]>([]);
   const [isVictory, setIsVictory] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Moved pickNewGame above useEffect to satisfy linter
-  const pickNewGame = async (buildKeys: string[], champs: Champion[]) => {
+  const buildRound = async (
+    buildKeys: string[],
+    champs: Champion[],
+  ): Promise<ItemRound | null> => {
+    if (buildKeys.length === 0 || champs.length === 0) return null;
+
     const randomKey = buildKeys[Math.floor(Math.random() * buildKeys.length)];
     const target = champs.find(
       (c) => c.id.toLowerCase() === randomKey.toLowerCase(),
     );
 
     if (target) {
-      setTargetChampion(target);
-
       // API-first: Try to fetch build from CommunityDragon
       const apiBuild = await fetchChampionBuild(target.id);
 
       // Fallback to local builds if API returns less than 6 items
       if (apiBuild.length >= 6) {
-        console.log(`Using API build for ${target.name}:`, apiBuild);
-        setTargetBuild(apiBuild.slice(0, 6));
+        return {
+          targetChampion: target,
+          targetBuild: apiBuild.slice(0, 6),
+        };
       } else {
-        console.log(`Falling back to local build for ${target.name}`);
-        setTargetBuild(championBuilds[randomKey] || []);
+        return {
+          targetChampion: target,
+          targetBuild: championBuilds[randomKey] || [],
+        };
       }
-    } else {
-      console.error("Target champion not found in champion list:", randomKey);
     }
 
+    console.error("Target champion not found in champion list:", randomKey);
+    return null;
+  };
+
+  const applyRound = (round: ItemRound) => {
+    setTargetChampion(round.targetChampion);
+    setTargetBuild(round.targetBuild);
     setGuesses([]);
     setIsVictory(false);
   };
@@ -64,10 +82,20 @@ export function ItemGuessGame() {
       });
       setItemMap(map);
 
-      // Pick random champion from our builds list
       const buildKeys = Object.keys(championBuilds);
       if (buildKeys.length > 0 && champs.length > 0) {
-        pickNewGame(buildKeys, champs);
+        prefetchChampionBuilds(buildKeys);
+
+        const [initialRound, preloadedRound] = await Promise.all([
+          buildRound(buildKeys, champs),
+          buildRound(buildKeys, champs),
+        ]);
+
+        if (initialRound) {
+          applyRound(initialRound);
+        }
+
+        setNextRound(preloadedRound);
       }
 
       setLoading(false);
@@ -75,10 +103,24 @@ export function ItemGuessGame() {
     loadData();
   }, []);
 
-  const startNewGame = () => {
+  const startNewGame = async () => {
     const buildKeys = Object.keys(championBuilds);
     if (buildKeys.length > 0 && champions.length > 0) {
-      pickNewGame(buildKeys, champions);
+      if (nextRound) {
+        applyRound(nextRound);
+        const futureRound = await buildRound(buildKeys, champions);
+        setNextRound(futureRound);
+        return;
+      }
+
+      setLoading(true);
+      const freshRound = await buildRound(buildKeys, champions);
+      if (freshRound) {
+        applyRound(freshRound);
+      }
+      const futureRound = await buildRound(buildKeys, champions);
+      setNextRound(futureRound);
+      setLoading(false);
     }
   };
 

@@ -252,6 +252,13 @@ export interface ChampionDetail {
 }
 
 let championIdByAliasCache: Record<string, number> | null = null;
+const championDetailCache = new Map<string, ChampionDetail>();
+const championDetailPromiseCache = new Map<
+  string,
+  Promise<ChampionDetail | null>
+>();
+const championBuildCache = new Map<string, string[]>();
+const championBuildPromiseCache = new Map<string, Promise<string[]>>();
 
 async function getChampionIdByAlias(): Promise<Record<string, number>> {
   if (championIdByAliasCache) {
@@ -278,51 +285,73 @@ async function getChampionIdByAlias(): Promise<Record<string, number>> {
 export async function fetchChampionDetail(
   apiId: string,
 ): Promise<ChampionDetail | null> {
-  try {
-    const idByAlias = await getChampionIdByAlias();
-    const championId = idByAlias[apiId.toLowerCase()];
-    if (!championId) {
-      throw new Error(`No CommunityDragon champion id found for ${apiId}`);
-    }
+  const cacheKey = apiId.toLowerCase();
 
-    const url = `${CDRAGON_BASE_URL}/champions/${championId}.json`;
-    const response = await fetch(url);
-    if (!response.ok) throw new Error("Failed to fetch champion detail");
-
-    const champData = (await response.json()) as CommunityDragonChampionDetail;
-
-    return {
-      id: String(champData.id ?? championId),
-      name: champData.name ?? apiId,
-      title: champData.title ?? "",
-      lore: champData.shortBio ?? "",
-      skins: (champData.skins ?? []).map((skin, index) => ({
-        id: String(skin.id ?? index),
-        num: index,
-        name: skin.name,
-        chromas: Boolean(skin.chromas),
-        splashPath: toCommunityDragonAssetUrl(
-          skin.splashPath ?? skin.uncenteredSplashPath,
-        ),
-      })),
-      passive: {
-        name: champData.passive?.name ?? "",
-        description: champData.passive?.description ?? "",
-        image: {
-          full: toCommunityDragonAssetUrl(champData.passive?.abilityIconPath),
-        },
-      },
-      spells: (champData.spells ?? []).map((spell, index) => ({
-        id: spell.spellKey ?? String(index),
-        name: spell.name ?? "",
-        description: spell.description ?? "",
-        image: { full: toCommunityDragonAssetUrl(spell.abilityIconPath) },
-      })),
-    };
-  } catch (e) {
-    console.error("Error fetching detail for", apiId, e);
-    return null;
+  if (championDetailCache.has(cacheKey)) {
+    return championDetailCache.get(cacheKey) ?? null;
   }
+
+  const pendingRequest = championDetailPromiseCache.get(cacheKey);
+  if (pendingRequest) {
+    return pendingRequest;
+  }
+
+  const request = (async (): Promise<ChampionDetail | null> => {
+    try {
+      const idByAlias = await getChampionIdByAlias();
+      const championId = idByAlias[cacheKey];
+      if (!championId) {
+        throw new Error(`No CommunityDragon champion id found for ${apiId}`);
+      }
+
+      const url = `${CDRAGON_BASE_URL}/champions/${championId}.json`;
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("Failed to fetch champion detail");
+
+      const champData =
+        (await response.json()) as CommunityDragonChampionDetail;
+
+      const detail: ChampionDetail = {
+        id: String(champData.id ?? championId),
+        name: champData.name ?? apiId,
+        title: champData.title ?? "",
+        lore: champData.shortBio ?? "",
+        skins: (champData.skins ?? []).map((skin, index) => ({
+          id: String(skin.id ?? index),
+          num: index,
+          name: skin.name,
+          chromas: Boolean(skin.chromas),
+          splashPath: toCommunityDragonAssetUrl(
+            skin.splashPath ?? skin.uncenteredSplashPath,
+          ),
+        })),
+        passive: {
+          name: champData.passive?.name ?? "",
+          description: champData.passive?.description ?? "",
+          image: {
+            full: toCommunityDragonAssetUrl(champData.passive?.abilityIconPath),
+          },
+        },
+        spells: (champData.spells ?? []).map((spell, index) => ({
+          id: spell.spellKey ?? String(index),
+          name: spell.name ?? "",
+          description: spell.description ?? "",
+          image: { full: toCommunityDragonAssetUrl(spell.abilityIconPath) },
+        })),
+      };
+
+      championDetailCache.set(cacheKey, detail);
+      return detail;
+    } catch (e) {
+      console.error("Error fetching detail for", apiId, e);
+      return null;
+    } finally {
+      championDetailPromiseCache.delete(cacheKey);
+    }
+  })();
+
+  championDetailPromiseCache.set(cacheKey, request);
+  return request;
 }
 
 /**
@@ -331,41 +360,73 @@ export async function fetchChampionDetail(
  * Returns empty array if no build data is available or on error.
  */
 export async function fetchChampionBuild(apiId: string): Promise<string[]> {
-  try {
-    const idByAlias = await getChampionIdByAlias();
-    const championId = idByAlias[apiId.toLowerCase()];
-    if (!championId) {
-      console.warn(`No CommunityDragon champion id found for ${apiId}`);
+  const cacheKey = apiId.toLowerCase();
+
+  if (championBuildCache.has(cacheKey)) {
+    return championBuildCache.get(cacheKey) ?? [];
+  }
+
+  const pendingRequest = championBuildPromiseCache.get(cacheKey);
+  if (pendingRequest) {
+    return pendingRequest;
+  }
+
+  const request = (async (): Promise<string[]> => {
+    try {
+      const idByAlias = await getChampionIdByAlias();
+      const championId = idByAlias[cacheKey];
+      if (!championId) {
+        console.warn(`No CommunityDragon champion id found for ${apiId}`);
+        return [];
+      }
+
+      const url = `${CDRAGON_BASE_URL}/champions/${championId}.json`;
+      const response = await fetch(url);
+      if (!response.ok) {
+        console.warn(`Failed to fetch champion detail for ${apiId}`);
+        return [];
+      }
+
+      const champData = await response.json();
+
+      // Try to extract recommended items from the champion data
+      // CommunityDragon may have recommendedItemDefaults or other build data
+      const recommendedItems = champData.recommendedItemDefaults;
+
+      if (Array.isArray(recommendedItems) && recommendedItems.length > 0) {
+        // Extract item IDs and convert to strings
+        const itemIds = recommendedItems
+          .filter((item: any) => item && typeof item === "number")
+          .map((id: number) => String(id));
+
+        championBuildCache.set(cacheKey, itemIds);
+        return itemIds;
+      }
+
+      // If no recommended items found, return empty array
+      championBuildCache.set(cacheKey, []);
       return [];
-    }
-
-    const url = `${CDRAGON_BASE_URL}/champions/${championId}.json`;
-    const response = await fetch(url);
-    if (!response.ok) {
-      console.warn(`Failed to fetch champion detail for ${apiId}`);
+    } catch (e) {
+      console.warn("Error fetching build for", apiId, e);
       return [];
+    } finally {
+      championBuildPromiseCache.delete(cacheKey);
     }
+  })();
 
-    const champData = await response.json();
+  championBuildPromiseCache.set(cacheKey, request);
+  return request;
+}
 
-    // Try to extract recommended items from the champion data
-    // CommunityDragon may have recommendedItemDefaults or other build data
-    const recommendedItems = champData.recommendedItemDefaults;
+export function prefetchChampionDetails(apiIds: string[]): void {
+  for (const apiId of apiIds) {
+    void fetchChampionDetail(apiId);
+  }
+}
 
-    if (Array.isArray(recommendedItems) && recommendedItems.length > 0) {
-      // Extract item IDs and convert to strings
-      const itemIds = recommendedItems
-        .filter((item: any) => item && typeof item === "number")
-        .map((id: number) => String(id));
-
-      return itemIds;
-    }
-
-    // If no recommended items found, return empty array
-    return [];
-  } catch (e) {
-    console.warn("Error fetching build for", apiId, e);
-    return [];
+export function prefetchChampionBuilds(apiIds: string[]): void {
+  for (const apiId of apiIds) {
+    void fetchChampionBuild(apiId);
   }
 }
 

@@ -4,6 +4,12 @@ import { SearchBar } from "./SearchBar";
 import { VictoryModal } from "./VictoryModal";
 import { fetchChampions, fetchChampionDetail } from "../services/riotApi";
 
+interface UltimateRound {
+  target: Champion;
+  ultimateName: string;
+  ultimateImage: string;
+}
+
 export function UltimateGame() {
   const [champions, setChampions] = useState<Champion[]>([]);
   const [target, setTarget] = useState<Champion | null>(null);
@@ -15,34 +21,53 @@ export function UltimateGame() {
   const [guesses, setGuesses] = useState<string[]>([]);
   const [isVictory, setIsVictory] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [nextRound, setNextRound] = useState<UltimateRound | null>(null);
 
-  const startNewGame = async (champList: Champion[] = champions) => {
-    if (champList.length === 0) return;
-    setLoading(true);
+  const buildRound = async (
+    champList: Champion[] = champions,
+  ): Promise<UltimateRound | null> => {
+    if (champList.length === 0) return null;
+
+    const randomChamp = champList[Math.floor(Math.random() * champList.length)];
+    const detail = await fetchChampionDetail(randomChamp.apiId);
+    if (!detail) {
+      return null;
+    }
+
+    const ult = detail.spells[3];
+    return {
+      target: randomChamp,
+      ultimateName: ult.name,
+      ultimateImage: ult.image.full,
+    };
+  };
+
+  const applyRound = (round: UltimateRound) => {
+    setTarget(round.target);
+    setUltimateName(round.ultimateName);
+    setUltimateImage(round.ultimateImage);
     setIsVictory(false);
     setGuesses([]);
     setPixelationLevel(8);
+  };
 
-    // 1. Pick Random Champion
-    const randomChamp = champList[Math.floor(Math.random() * champList.length)];
+  const startNewGame = async (champList: Champion[] = champions) => {
+    if (champList.length === 0) return;
 
-    // 2. Fetch Details to get Spell Names
-    const detail = await fetchChampionDetail(randomChamp.apiId);
-
-    if (!detail) {
-      // Fallback or retry?
-      setLoading(false);
+    if (nextRound) {
+      applyRound(nextRound);
+      const futureRound = await buildRound(champList);
+      setNextRound(futureRound);
       return;
     }
 
-    // 3. Get Ultimate Name (Index 3 is 'R')
-    const ult = detail.spells[3];
-
-    setTarget(randomChamp);
-    setUltimateName(ult.name);
-
-    setUltimateImage(ult.image.full);
-
+    setLoading(true);
+    const freshRound = await buildRound(champList);
+    if (freshRound) {
+      applyRound(freshRound);
+    }
+    const futureRound = await buildRound(champList);
+    setNextRound(futureRound);
     setLoading(false);
   };
 

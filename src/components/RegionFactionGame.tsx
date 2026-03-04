@@ -145,6 +145,7 @@ function getRegionButtonColor(region: string): string {
 export function RegionFactionGame() {
   const [champions, setChampions] = useState<Champion[]>([]);
   const [round, setRound] = useState<RegionFactionRound | null>(null);
+  const [nextRound, setNextRound] = useState<RegionFactionRound | null>(null);
   const [guessedChampionIds, setGuessedChampionIds] = useState<string[]>([]);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -164,8 +165,23 @@ export function RegionFactionGame() {
     };
   };
 
+  const applyRound = (next: RegionFactionRound) => {
+    setIsVictory(false);
+    setFeedback(null);
+    setGuessedChampionIds([]);
+    setRound(next);
+  };
+
   const startNewRound = async (pool: Champion[] = champions) => {
     if (pool.length === 0) return;
+
+    if (nextRound) {
+      applyRound(nextRound);
+      const futureChampion = pool[Math.floor(Math.random() * pool.length)];
+      const futureRound = await buildRound(futureChampion);
+      setNextRound(futureRound);
+      return;
+    }
 
     setLoading(true);
     setIsVictory(false);
@@ -173,9 +189,12 @@ export function RegionFactionGame() {
     setGuessedChampionIds([]);
 
     const champion = pool[Math.floor(Math.random() * pool.length)];
-    const nextRound = await buildRound(champion);
+    const initialRound = await buildRound(champion);
+    setRound(initialRound);
 
-    setRound(nextRound);
+    const futureChampion = pool[Math.floor(Math.random() * pool.length)];
+    const futureRound = await buildRound(futureChampion);
+    setNextRound(futureRound);
     setLoading(false);
   };
 

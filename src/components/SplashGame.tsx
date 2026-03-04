@@ -4,6 +4,16 @@ import { SearchBar } from "./SearchBar";
 import { VictoryModal } from "./VictoryModal";
 import { fetchChampions, fetchChampionDetail } from "../services/riotApi";
 
+interface SplashRound {
+  target: Champion;
+  skin: {
+    num: number;
+    name: string;
+    splashPath?: string;
+  };
+  origin: { x: number; y: number };
+}
+
 export function SplashGame() {
   const [champions, setChampions] = useState<Champion[]>([]);
   const [target, setTarget] = useState<Champion | null>(null);
@@ -18,17 +28,17 @@ export function SplashGame() {
   const [isVictory, setIsVictory] = useState(false);
   const [loading, setLoading] = useState(true);
   const [guesses, setGuesses] = useState<string[]>([]); // Keep track of wrong guesses names
+  const [nextRound, setNextRound] = useState<SplashRound | null>(null);
+  const [isRoundReady, setIsRoundReady] = useState(false);
 
   // Refs for image interaction if needed, but CSS transform is enough
 
-  const startNewGame = async (champList: Champion[] = champions) => {
-    if (champList.length === 0) return;
-    setLoading(true);
+  const buildRound = async (
+    champList: Champion[] = champions,
+  ): Promise<SplashRound | null> => {
+    if (champList.length === 0) return null;
 
     const randomChamp = champList[Math.floor(Math.random() * champList.length)];
-    setTarget(randomChamp);
-
-    // Fetch skins for this champion
     const detail = await fetchChampionDetail(randomChamp.apiId);
     let skinNum = 0;
     let skinName = "Default";
@@ -42,19 +52,50 @@ export function SplashGame() {
       splashPath = randomSkin.splashPath;
     }
 
-    setCurrentSkin({ num: skinNum, name: skinName, splashPath });
+    return {
+      target: randomChamp,
+      skin: { num: skinNum, name: skinName, splashPath },
+      origin: {
+        x: Math.floor(Math.random() * 101),
+        y: Math.floor(Math.random() * 101),
+      },
+    };
+  };
 
-    // Random focus point, but keep away from extreme edges to avoid showing black bars if possible
-    // though with overflow hidden and scale > 1 it should be fine.
-    // Let's allow 0-100% basically.
-    const randomX = Math.floor(Math.random() * 101);
-    const randomY = Math.floor(Math.random() * 101);
-
-    // Set initial state
-    setOrigin({ x: randomX, y: randomY });
+  const applyRound = (round: SplashRound) => {
+    setIsRoundReady(false);
+    setTarget(round.target);
+    setCurrentSkin(round.skin);
+    setOrigin(round.origin);
     setZoomLevel(3.5);
     setIsVictory(false);
     setGuesses([]);
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setIsRoundReady(true);
+      });
+    });
+  };
+
+  const startNewGame = async (champList: Champion[] = champions) => {
+    if (champList.length === 0) return;
+
+    if (nextRound) {
+      applyRound(nextRound);
+      const futureRound = await buildRound(champList);
+      setNextRound(futureRound);
+      return;
+    }
+
+    setLoading(true);
+    const freshRound = await buildRound(champList);
+    if (freshRound) {
+      applyRound(freshRound);
+    }
+
+    const futureRound = await buildRound(champList);
+    setNextRound(futureRound);
     setLoading(false);
   };
 
@@ -111,15 +152,19 @@ export function SplashGame() {
         </h1>
 
         <div className="relative w-full max-w-4xl mx-auto h-[260px] sm:h-[380px] md:h-[500px] border-2 border-slate-700 rounded-xl overflow-hidden shadow-2xl mb-6 bg-black">
-          <img
-            src={splashUrl}
-            alt="Mystery Splash"
-            className="w-full h-full object-cover transition-all duration-700 ease-in-out"
-            style={{
-              transform: `scale(${zoomLevel})`,
-              transformOrigin: `${origin.x}% ${origin.y}%`,
-            }}
-          />
+          {isRoundReady ? (
+            <img
+              src={splashUrl}
+              alt="Mystery Splash"
+              className="w-full h-full object-cover transition-all duration-700 ease-in-out"
+              style={{
+                transform: `scale(${zoomLevel})`,
+                transformOrigin: `${origin.x}% ${origin.y}%`,
+              }}
+            />
+          ) : (
+            <div className="w-full h-full bg-black" />
+          )}
         </div>
 
         {!isVictory && (

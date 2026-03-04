@@ -47,6 +47,7 @@ export function VoiceLineGame() {
   const [champions, setChampions] = useState<Champion[]>([]);
   const [voiceClips, setVoiceClips] = useState<ChampionVoiceClip[]>([]);
   const [round, setRound] = useState<VoiceRound | null>(null);
+  const [nextRound, setNextRound] = useState<VoiceRound | null>(null);
   const [activeClipIndex, setActiveClipIndex] = useState(0);
 
   const [guessedChampionIds, setGuessedChampionIds] = useState<string[]>([]);
@@ -87,14 +88,18 @@ export function VoiceLineGame() {
       .filter((candidate): candidate is VoiceRound => !!candidate);
   }, [championsByName, voiceClips]);
 
-  const startNewRound = (pool: VoiceRound[] = availableRounds) => {
+  const buildRound = (
+    pool: VoiceRound[] = availableRounds,
+  ): VoiceRound | null => {
     if (pool.length === 0) {
-      setRound(null);
-      return;
+      return null;
     }
 
-    const nextRound = pool[Math.floor(Math.random() * pool.length)];
-    setRound(nextRound);
+    return pool[Math.floor(Math.random() * pool.length)];
+  };
+
+  const applyRound = (next: VoiceRound) => {
+    setRound(next);
     setActiveClipIndex(0);
 
     setGuessedChampionIds([]);
@@ -104,6 +109,23 @@ export function VoiceLineGame() {
     setIsPlaying(false);
     setCurrentTime(0);
     setDuration(0);
+  };
+
+  const startNewRound = (pool: VoiceRound[] = availableRounds) => {
+    if (nextRound) {
+      applyRound(nextRound);
+      setNextRound(buildRound(pool));
+      return;
+    }
+
+    const initialRound = buildRound(pool);
+    if (!initialRound) {
+      setRound(null);
+      return;
+    }
+
+    applyRound(initialRound);
+    setNextRound(buildRound(pool));
   };
 
   useEffect(() => {

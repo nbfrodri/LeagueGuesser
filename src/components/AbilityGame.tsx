@@ -4,6 +4,16 @@ import { SearchBar } from "./SearchBar";
 import { VictoryModal } from "./VictoryModal";
 import { fetchChampions, fetchChampionDetail } from "../services/riotApi";
 
+interface AbilityRound {
+  target: Champion;
+  abilityData: {
+    image: string;
+    slot: "P" | "Q" | "W" | "E" | "R";
+    name: string;
+  };
+  rotation: number;
+}
+
 export function AbilityGame() {
   const [champions, setChampions] = useState<Champion[]>([]);
   const [target, setTarget] = useState<Champion | null>(null);
@@ -24,57 +34,79 @@ export function AbilityGame() {
   const [isVictory, setIsVictory] = useState(false);
   const [loading, setLoading] = useState(true);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [nextRound, setNextRound] = useState<AbilityRound | null>(null);
 
-  const startNewGame = async (champList: Champion[] = champions) => {
-    if (champList.length === 0) return;
-    setLoading(true);
-    setPhase("champion");
-    setGuesses([]);
-    setWrongGuessCount(0);
-    setIsVictory(false);
-    setFeedback(null);
+  const buildRound = async (
+    champList: Champion[] = champions,
+  ): Promise<AbilityRound | null> => {
+    if (champList.length === 0) return null;
 
-    // 1. Pick Champion
     const randomChamp = champList[Math.floor(Math.random() * champList.length)];
-
-    // 2. Fetch Details (Spells)
-    // We fetch BEFORE setting state to avoid "Target" being set while "Ability" is old/null
     const detail = await fetchChampionDetail(randomChamp.apiId);
 
     if (!detail) {
       console.error("Failed to fetch details for", randomChamp.name);
-      setLoading(false);
-      return; // Retry or handle error
+      return null;
     }
 
-    // 3. Pick Ability (P, Q, W, E, R)
     const pick = Math.floor(Math.random() * 5);
-    let newAbilityData = null;
+    let abilityData: AbilityRound["abilityData"];
 
     if (pick === 0) {
-      newAbilityData = {
+      abilityData = {
         image: detail.passive.image.full,
-        slot: "P" as const,
+        slot: "P",
         name: detail.passive.name,
       };
     } else {
       const spellIndex = pick - 1;
       const spell = detail.spells[spellIndex];
       const slots = ["Q", "W", "E", "R"] as const;
-      newAbilityData = {
+      abilityData = {
         image: spell.image.full,
         slot: slots[spellIndex],
         name: spell.name,
       };
     }
 
-    // ATOMIC UPDATE: Set everything at once (or close enough)
-    setTarget(randomChamp);
-    setAbilityData(newAbilityData);
+    return {
+      target: randomChamp,
+      abilityData,
+      rotation: Math.floor(Math.random() * 360),
+    };
+  };
 
-    // 4. Set Visuals
-    setRotation(Math.floor(Math.random() * 360));
+  const applyRound = (round: AbilityRound) => {
+    setPhase("champion");
+    setGuesses([]);
+    setWrongGuessCount(0);
+    setIsVictory(false);
+    setFeedback(null);
+    setTarget(round.target);
+    setAbilityData(round.abilityData);
+    setRotation(round.rotation);
     setIsGrayscale(true);
+  };
+
+  const startNewGame = async (champList: Champion[] = champions) => {
+    if (champList.length === 0) return;
+
+    if (nextRound) {
+      applyRound(nextRound);
+      const futureRound = await buildRound(champList);
+      setNextRound(futureRound);
+      return;
+    }
+
+    setLoading(true);
+
+    const freshRound = await buildRound(champList);
+    if (freshRound) {
+      applyRound(freshRound);
+    }
+
+    const futureRound = await buildRound(champList);
+    setNextRound(futureRound);
 
     setLoading(false);
   };
