@@ -1,12 +1,12 @@
-# 🎮 League Guesser
+# League Guesser
 
 A fan-made League of Legends guessing game inspired by [Loldle](https://loldle.net/). Built for fun and personal use — this project is not affiliated with or endorsed by Riot Games.
 
-🎮 **[Play Now](https://leagueguesser.vercel.app/)**
+**[Play Now](https://leagueguesser.vercel.app/)**
 
 ---
 
-## 🕹️ What Is It?
+## What Is It?
 
 League Guesser is a browser-based trivia game where you test your knowledge of League of Legends champions, abilities, items, runes, lore, voice lines, and drafting. It pulls live data primarily from the **Community Dragon API (CDragon)**, which provides champion, item, media, and metadata endpoints used across the game modes.
 
@@ -30,7 +30,7 @@ The app includes a modern dark UI, mobile-responsive layouts, and polished game 
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Technology               | Purpose                                                                                      |
 | ------------------------ | -------------------------------------------------------------------------------------------- |
@@ -49,13 +49,13 @@ The app includes a modern dark UI, mobile-responsive layouts, and polished game 
 
 ---
 
-## 🤖 Built with AI
+## Built with AI
 
 This project was developed with AI-assisted coding workflows for implementation support, refactoring, and debugging — while all creative decisions and game design were guided by a human developer.
 
 ---
 
-## ⚠️ Maintenance & Deprecation Notice
+## Maintenance & Deprecation Notice
 
 This project was built for **fun and personal use**. As such:
 
@@ -68,7 +68,7 @@ If something breaks after a new patch, it's likely because Riot updated their AP
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ```bash
 # Clone the repository
@@ -94,6 +94,6 @@ npm run build
 
 ---
 
-## 📜 Disclaimer
+## Disclaimer
 
 This is a **fan-made project** inspired by [Loldle](https://loldle.net/). It is **not** endorsed by Riot Games and does not reflect the views or opinions of Riot Games or anyone officially involved in producing or managing Riot Games properties. **Riot Games**, **League of Legends**, and all associated properties are trademarks or registered trademarks of **Riot Games, Inc.**
